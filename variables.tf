@@ -10,10 +10,6 @@ variable "akv_config" {
   description = "(Required) Key Vault Configuration Object"
 }
 
-variable "convention" {
-  description = "(Required) Naming convention method to use"
-}
-
 variable "env" {
   description = "(Required) You can use a env to the name of the resource"
   type        = string
