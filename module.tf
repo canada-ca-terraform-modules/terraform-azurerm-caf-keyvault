@@ -10,7 +10,7 @@ locals {
 
 resource "azurerm_key_vault" "akv" {
   name                = local.name-kv-result
-  location            = var.resource_group.localtion
+  location            = var.resource_group.location
   resource_group_name = var.resource_group.name
   tenant_id           = data.azurerm_client_config.current.tenant_id
   tags                = local.tags
