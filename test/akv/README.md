@@ -6,6 +6,7 @@ Creates an Azure Key Vault test environment.
 To run this example, simply execute: 
 
 ```hcl
+rover login
 terraform init
 terraform plan
 terraform apply
