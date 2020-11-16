@@ -1,23 +1,24 @@
 variable "resource_group" {
-  description = "(Required) Resource group object of the AKV to be created"
+  description = "Resource group object of the AKV to be created"
+  type        = any
 }
 
 variable "tags" {
-  description = "(Required) Tags to be applied to the AKV to be created"
+  description = "Tags to be applied to the AKV to be created"
+  type        = map(string)
 }
 
 variable "akv_config" {
-  description = "(Required) Key Vault Configuration Object"
+  description = "Key Vault Configuration Object"
+  type        = any
 }
 
 variable "env" {
-  description = "(Required) You can use a env to the name of the resource"
+  description = "You can use a prefix to add to the list of resource groups you want to create"
   type        = string
-  default     = ""
 }
 
 variable "userDefinedString" {
-  description = "(Required) UserDefinedString part of the name of the resource"
+  description = "UserDefinedString part of the name of the resource"
   type        = string
-  default     = ""
 }
