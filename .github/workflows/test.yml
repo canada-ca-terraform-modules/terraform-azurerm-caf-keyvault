@@ -1,7 +1,7 @@
 name: test module
 
 on:
-  push:
+  pull_request:
     branches:
       - dev
       - master
@@ -17,7 +17,7 @@ jobs:
     name: module_test_deploy
     runs-on: ubuntu-latest
     container:
-      image: sscspccloudnuage/rover:2011.0210
+      image: sscspccloudnuage/rover:2103.2611
       options: --user 0
 
     strategy:
@@ -41,11 +41,20 @@ jobs:
         run: |
           terraform version
 
-      - name: Deploy module test
+      - name: terraform init
         run: |
           cd /tf/caf/test
           terraform init
-          terraform apply -auto-approve
+
+      - name: terraform plan
+        run: |
+          cd /tf/caf/test
+          terraform plan -out plan
+
+      - name: terraform apply
+        run: |
+          cd /tf/caf/test
+          terraform apply "plan"
 
       - name: Destroy module test
         if: ${{ always() }}
