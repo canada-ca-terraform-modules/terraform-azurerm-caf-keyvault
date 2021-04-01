@@ -13,7 +13,7 @@ provider "azurerm" {
 }
 
 module "akv_test" {
-  source            = "../"
+  source            = "../."
   akv_config        = var.akv_config
   resource_group    = azurerm_resource_group.test-RG
   tags              = var.tags
