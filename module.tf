@@ -20,6 +20,7 @@ resource "azurerm_key_vault" "akv" {
   enabled_for_deployment          = lookup(var.akv_config.akv_features, "enabled_for_deployment", null)
   enabled_for_template_deployment = lookup(var.akv_config.akv_features, "enabled_for_template_deployment", null)
   purge_protection_enabled        = lookup(var.akv_config.akv_features, "purge_protection_enabled", null)
+  public_network_access_enabled   = lookup(var.akv_config.akv_features, "public_network_access_enabled", false)
 
   dynamic "network_acls" {
     for_each = lookup(var.akv_config, "network_acls", {}) != {} ? [1] : []
