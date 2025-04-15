@@ -1,12 +1,15 @@
 locals {
   env_4                     = substr(var.env, 0, 4)
   name-regex                = "/[^0-9A-Za-z-]/" # Anti-pattern to match all characters not in: 0-9 a-z A-Z -
+  double_hyphen_regex       = "-{2,}" # Pattern to match double or more hyphens
   unique_Keyvault           = substr(sha1(var.resource_group.id), 0, 8)
   userDefinedString-replace = replace(var.userDefinedString, "_", "-")
-  name-kv-16                = substr("${local.env_4}CKV-${local.userDefinedString-replace}", 0, 16)
+  userDefinedString-clean   = replace(local.userDefinedString-replace, local.double_hyphen_regex, "-")
+  name-kv-16                = substr("${local.env_4}-CKV-${local.userDefinedString-clean}", 0, 16)
   name-kv-21                = substr("${local.name-kv-16}-${local.unique_Keyvault}", 0, 21)
   name-kv-result            = replace("${local.name-kv-21}-kv", local.name-regex, "")
 }
+ 
 
 resource "azurerm_key_vault" "akv" {
   name                = local.name-kv-result
