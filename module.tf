@@ -21,7 +21,7 @@ resource "azurerm_key_vault" "akv" {
   enabled_for_disk_encryption     = lookup(var.akv_config.akv_features, "enabled_for_disk_encryption", null)
   enabled_for_deployment          = lookup(var.akv_config.akv_features, "enabled_for_deployment", null)
   enabled_for_template_deployment = lookup(var.akv_config.akv_features, "enabled_for_template_deployment", null)
-  enable_rbac_authorization       = lookup(var.akv_config.akv_features, "enable_rbac_authorization", null)
+  rbac_authorization_enabled       = lookup(var.akv_config.akv_features, "enable_rbac_authorization", null)
   purge_protection_enabled        = lookup(var.akv_config.akv_features, "purge_protection_enabled", null)
   public_network_access_enabled   = lookup(var.akv_config.akv_features, "public_network_access_enabled", false)
 
