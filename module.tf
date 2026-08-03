@@ -10,6 +10,10 @@ locals {
 
   # azurerm >= 5.0: access_policy is an optional list of objects (up to 1024). Caller may omit it entirely.
   access_policies = try(var.akv_config.access_policy, [])
+
+  # Computed once via try() so the precondition below never re-references a potentially-absent
+  # object attribute outside of try() (a second bare reference can error rather than short-circuit).
+  soft_delete_retention_days = try(var.akv_config.soft_delete_retention_days, null)
 }
 
 resource "azurerm_key_vault" "akv" {
@@ -31,7 +35,7 @@ resource "azurerm_key_vault" "akv" {
   # public access must explicitly set akv_features.public_network_access_enabled = true.
   public_network_access_enabled = lookup(var.akv_config.akv_features, "public_network_access_enabled", false)
   # New (optional): number of days that soft-deleted items are retained (7-90, default 90). Can only be configured once.
-  soft_delete_retention_days = try(var.akv_config.soft_delete_retention_days, null)
+  soft_delete_retention_days = local.soft_delete_retention_days
 
   dynamic "network_acls" {
     for_each = lookup(var.akv_config, "network_acls", {}) != {} ? [1] : []
@@ -71,7 +75,7 @@ resource "azurerm_key_vault" "akv" {
     }
 
     precondition {
-      condition     = try(var.akv_config.soft_delete_retention_days, null) == null || (var.akv_config.soft_delete_retention_days >= 7 && var.akv_config.soft_delete_retention_days <= 90)
+      condition     = local.soft_delete_retention_days == null || (local.soft_delete_retention_days >= 7 && local.soft_delete_retention_days <= 90)
       error_message = "soft_delete_retention_days must be between 7 and 90 (inclusive) when set."
     }
   }
