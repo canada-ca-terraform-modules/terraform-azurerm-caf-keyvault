@@ -7,11 +7,18 @@ locals {
   name-kv-21                = substr("${local.name-kv-16}-${local.unique_Keyvault}", 0, 21)
   name-kv-result            = replace("${local.name-kv-21}-kv", local.name-regex, "")
   name-kv-remove-doubledash = replace(local.name-kv-result, "--", "-")
+
+  # azurerm >= 5.0: access_policy is an optional list of objects (up to 1024). Caller may omit it entirely.
+  access_policies = try(var.akv_config.access_policy, [])
+
+  # Computed once via try() so the precondition below never re-references a potentially-absent
+  # object attribute outside of try() (a second bare reference can error rather than short-circuit).
+  soft_delete_retention_days = try(var.akv_config.soft_delete_retention_days, null)
 }
- 
 
 resource "azurerm_key_vault" "akv" {
-  name                = local.name-kv-remove-doubledash
+  # Optional: override the auto-generated name (default: {env4}CKV-{userDefinedString}-{unique}-kv)
+  name                = try(var.akv_config.name, local.name-kv-remove-doubledash)
   location            = var.resource_group.location
   resource_group_name = var.resource_group.name
   tenant_id           = data.azurerm_client_config.current.tenant_id
@@ -21,18 +28,57 @@ resource "azurerm_key_vault" "akv" {
   enabled_for_disk_encryption     = lookup(var.akv_config.akv_features, "enabled_for_disk_encryption", null)
   enabled_for_deployment          = lookup(var.akv_config.akv_features, "enabled_for_deployment", null)
   enabled_for_template_deployment = lookup(var.akv_config.akv_features, "enabled_for_template_deployment", null)
-  rbac_authorization_enabled       = lookup(var.akv_config.akv_features, "enable_rbac_authorization", null)
-  purge_protection_enabled        = lookup(var.akv_config.akv_features, "purge_protection_enabled", null)
-  public_network_access_enabled   = lookup(var.akv_config.akv_features, "public_network_access_enabled", false)
+  # azurerm >= 5.0: rbac_authorization_enabled is now Required (was Optional, default false) - default preserved as false
+  rbac_authorization_enabled = lookup(var.akv_config.akv_features, "enable_rbac_authorization", false)
+  purge_protection_enabled   = lookup(var.akv_config.akv_features, "purge_protection_enabled", null)
+  # Defaults to false (private-only) rather than the Azure API default of true. Callers that want
+  # public access must explicitly set akv_features.public_network_access_enabled = true.
+  public_network_access_enabled = lookup(var.akv_config.akv_features, "public_network_access_enabled", false)
+  # New (optional): number of days that soft-deleted items are retained (7-90, default 90). Can only be configured once.
+  soft_delete_retention_days = local.soft_delete_retention_days
 
   dynamic "network_acls" {
     for_each = lookup(var.akv_config, "network_acls", {}) != {} ? [1] : []
 
     content {
-      default_action             = lookup(var.akv_config.network_acls, "default_action", null)
-      bypass                     = lookup(var.akv_config.network_acls, "bypass", null)
+      default_action = lookup(var.akv_config.network_acls, "default_action", null)
+      # Azure requires bypass to be "AzureServices" or "None" whenever network_acls is present;
+      # default to "AzureServices" so omitting the key doesn't produce a confusing provider error.
+      bypass                     = lookup(var.akv_config.network_acls, "bypass", "AzureServices")
       ip_rules                   = lookup(var.akv_config.network_acls, "ip_rules", null)
       virtual_network_subnet_ids = lookup(var.akv_config.network_acls, "virtual_network_subnet_ids", null)
+    }
+  }
+
+  # New (optional): inline access policies. Up to 1024 entries. Mutually exclusive with
+  # enable_rbac_authorization = true (enforced by the lifecycle precondition below), and also
+  # mutually exclusive with managing the same object_id via the standalone
+  # azurerm_key_vault_access_policy resource.
+  dynamic "access_policy" {
+    for_each = local.access_policies
+
+    content {
+      tenant_id               = try(access_policy.value.tenant_id, data.azurerm_client_config.current.tenant_id)
+      object_id               = access_policy.value.object_id
+      application_id          = try(access_policy.value.application_id, null)
+      certificate_permissions = try(access_policy.value.certificate_permissions, null)
+      key_permissions         = try(access_policy.value.key_permissions, null)
+      secret_permissions      = try(access_policy.value.secret_permissions, null)
+      storage_permissions     = try(access_policy.value.storage_permissions, null)
+    }
+  }
+
+  lifecycle {
+    precondition {
+      condition     = !(lookup(var.akv_config.akv_features, "enable_rbac_authorization", false) == true && length(local.access_policies) > 0)
+      error_message = "access_policy blocks cannot be used when enable_rbac_authorization = true. Use Azure RBAC role assignments instead."
+    }
+
+    precondition {
+      # Ternary (not ||) so the range check is only evaluated when non-null - `||` is not
+      # reliably lazy for comparison operators across all supported Terraform versions.
+      condition     = local.soft_delete_retention_days == null ? true : (local.soft_delete_retention_days >= 7 && local.soft_delete_retention_days <= 90)
+      error_message = "soft_delete_retention_days must be between 7 and 90 (inclusive) when set."
     }
   }
 }
