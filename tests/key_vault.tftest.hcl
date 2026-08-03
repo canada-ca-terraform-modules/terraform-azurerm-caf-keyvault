@@ -170,3 +170,20 @@ run "custom_name_override" {
     error_message = "name override must be applied"
   }
 }
+
+run "rbac_with_access_policy_rejected" {
+  command = plan
+  expect_failures = [azurerm_key_vault.akv]
+  variables {
+    akv_config = {
+      sku_name     = "standard"
+      akv_features = { enable_rbac_authorization = true }
+      access_policy = [
+        {
+          object_id       = "11111111-1111-1111-1111-111111111111"
+          key_permissions = ["Get"]
+        }
+      ]
+    }
+  }
+}

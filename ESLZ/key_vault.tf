@@ -2,6 +2,17 @@ terraform {
   required_version = ">= 1.9"
 }
 
+variable "env" {
+  description = "Environment prefix (e.g. 'Dev', 'Prod') used in the auto-generated Key Vault name."
+  type        = string
+}
+
+variable "tags" {
+  description = "Tags applied to every resource created by this blueprint."
+  type        = map(string)
+  default     = {}
+}
+
 variable "key_vaults" {
   type        = any
   default     = {}

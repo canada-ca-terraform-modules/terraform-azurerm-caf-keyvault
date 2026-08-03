@@ -42,8 +42,10 @@ resource "azurerm_key_vault" "akv" {
     }
   }
 
-  # New (optional): inline access policies. Up to 1024 entries. Mutually exclusive with managing the
-  # same object_id via the standalone azurerm_key_vault_access_policy resource.
+  # New (optional): inline access policies. Up to 1024 entries. Mutually exclusive with
+  # enable_rbac_authorization = true (enforced by the lifecycle precondition below), and also
+  # mutually exclusive with managing the same object_id via the standalone
+  # azurerm_key_vault_access_policy resource.
   dynamic "access_policy" {
     for_each = local.access_policies
 
@@ -55,6 +57,13 @@ resource "azurerm_key_vault" "akv" {
       key_permissions         = try(access_policy.value.key_permissions, null)
       secret_permissions      = try(access_policy.value.secret_permissions, null)
       storage_permissions     = try(access_policy.value.storage_permissions, null)
+    }
+  }
+
+  lifecycle {
+    precondition {
+      condition     = !(lookup(var.akv_config.akv_features, "enable_rbac_authorization", false) == true && length(local.access_policies) > 0)
+      error_message = "access_policy blocks cannot be used when enable_rbac_authorization = true. Use Azure RBAC role assignments instead."
     }
   }
 }

@@ -28,13 +28,17 @@ The format from this entry onward follows [Keep a Changelog](https://keepachange
   are retained (`7`-`90`, provider default `90`). Additive with no plan diff when omitted.
 - `access_policy` optional input: inline access policies (up to 1024), rendered via a `dynamic`
   block gated on the caller supplying the list. Additive with no plan diff when omitted.
+- `lifecycle.precondition` on `azurerm_key_vault.akv` that rejects configurations combining
+  `enable_rbac_authorization = true` with inline `access_policy` entries (mutually exclusive in
+  Azure).
 - `providers.tf`, `.tflint.hcl` (none previously existed).
 - `.github/workflows/terraform-ci.yml` and `.github/workflows/release.yml` (release-on-merge,
   tagged from `ESLZ/key_vault.tf`'s own `?ref=`).
 - `ESLZ/key_vault.tf` (module block, previously absent) and `ESLZ/key_vault.tfvars` with commented
-  examples for every new argument.
+  examples for every new argument; added missing `variable "env"` and `variable "tags"` declarations
+  so `terraform validate` passes in the ESLZ directory.
 - `tests/key_vault.tftest.hcl` and `tests/upgrade_compat.tftest.hcl` (no prior test coverage
-  existed; 11 runs total, using `override_data` on `data.azurerm_client_config.current` so
+  existed; 12 runs total, using `override_data` on `data.azurerm_client_config.current` so
   `tenant_id` is a valid UUID under `mock_provider`).
 
 ### Known blockers
@@ -43,6 +47,6 @@ The format from this entry onward follows [Keep a Changelog](https://keepachange
   require no changes (aside from the `rbac_authorization_enabled` default change above, which is
   transparent to callers who already relied on the old `false` default).
 
-## v2.1.5
+## [v2.1.5] and earlier
 
 See git history for changes prior to this entry.
