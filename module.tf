@@ -75,7 +75,9 @@ resource "azurerm_key_vault" "akv" {
     }
 
     precondition {
-      condition     = local.soft_delete_retention_days == null || (local.soft_delete_retention_days >= 7 && local.soft_delete_retention_days <= 90)
+      # Ternary (not ||) so the range check is only evaluated when non-null - `||` is not
+      # reliably lazy for comparison operators across all supported Terraform versions.
+      condition     = local.soft_delete_retention_days == null ? true : (local.soft_delete_retention_days >= 7 && local.soft_delete_retention_days <= 90)
       error_message = "soft_delete_retention_days must be between 7 and 90 (inclusive) when set."
     }
   }
