@@ -85,6 +85,23 @@ run "with_network_acls" {
   }
 }
 
+run "network_acls_bypass_defaults_to_azureservices" {
+  command = plan
+  variables {
+    akv_config = {
+      sku_name     = "standard"
+      akv_features = {}
+      network_acls = {
+        default_action = "Deny"
+      }
+    }
+  }
+  assert {
+    condition     = azurerm_key_vault.akv.network_acls[0].bypass == "AzureServices"
+    error_message = "network_acls.bypass must default to AzureServices when omitted"
+  }
+}
+
 run "no_network_acls" {
   command = plan
   variables {
@@ -172,7 +189,7 @@ run "custom_name_override" {
 }
 
 run "rbac_with_access_policy_rejected" {
-  command = plan
+  command         = plan
   expect_failures = [azurerm_key_vault.akv]
   variables {
     akv_config = {
@@ -187,3 +204,16 @@ run "rbac_with_access_policy_rejected" {
     }
   }
 }
+
+run "soft_delete_retention_days_out_of_range_rejected" {
+  command         = plan
+  expect_failures = [azurerm_key_vault.akv]
+  variables {
+    akv_config = {
+      sku_name                   = "standard"
+      akv_features               = {}
+      soft_delete_retention_days = 6
+    }
+  }
+}
+

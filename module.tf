@@ -25,8 +25,10 @@ resource "azurerm_key_vault" "akv" {
   enabled_for_deployment          = lookup(var.akv_config.akv_features, "enabled_for_deployment", null)
   enabled_for_template_deployment = lookup(var.akv_config.akv_features, "enabled_for_template_deployment", null)
   # azurerm >= 5.0: rbac_authorization_enabled is now Required (was Optional, default false) - default preserved as false
-  rbac_authorization_enabled    = lookup(var.akv_config.akv_features, "enable_rbac_authorization", false)
-  purge_protection_enabled      = lookup(var.akv_config.akv_features, "purge_protection_enabled", null)
+  rbac_authorization_enabled = lookup(var.akv_config.akv_features, "enable_rbac_authorization", false)
+  purge_protection_enabled   = lookup(var.akv_config.akv_features, "purge_protection_enabled", null)
+  # Defaults to false (private-only) rather than the Azure API default of true. Callers that want
+  # public access must explicitly set akv_features.public_network_access_enabled = true.
   public_network_access_enabled = lookup(var.akv_config.akv_features, "public_network_access_enabled", false)
   # New (optional): number of days that soft-deleted items are retained (7-90, default 90). Can only be configured once.
   soft_delete_retention_days = try(var.akv_config.soft_delete_retention_days, null)
@@ -35,8 +37,10 @@ resource "azurerm_key_vault" "akv" {
     for_each = lookup(var.akv_config, "network_acls", {}) != {} ? [1] : []
 
     content {
-      default_action             = lookup(var.akv_config.network_acls, "default_action", null)
-      bypass                     = lookup(var.akv_config.network_acls, "bypass", null)
+      default_action = lookup(var.akv_config.network_acls, "default_action", null)
+      # Azure requires bypass to be "AzureServices" or "None" whenever network_acls is present;
+      # default to "AzureServices" so omitting the key doesn't produce a confusing provider error.
+      bypass                     = lookup(var.akv_config.network_acls, "bypass", "AzureServices")
       ip_rules                   = lookup(var.akv_config.network_acls, "ip_rules", null)
       virtual_network_subnet_ids = lookup(var.akv_config.network_acls, "virtual_network_subnet_ids", null)
     }
@@ -64,6 +68,11 @@ resource "azurerm_key_vault" "akv" {
     precondition {
       condition     = !(lookup(var.akv_config.akv_features, "enable_rbac_authorization", false) == true && length(local.access_policies) > 0)
       error_message = "access_policy blocks cannot be used when enable_rbac_authorization = true. Use Azure RBAC role assignments instead."
+    }
+
+    precondition {
+      condition     = try(var.akv_config.soft_delete_retention_days, null) == null || (var.akv_config.soft_delete_retention_days >= 7 && var.akv_config.soft_delete_retention_days <= 90)
+      error_message = "soft_delete_retention_days must be between 7 and 90 (inclusive) when set."
     }
   }
 }

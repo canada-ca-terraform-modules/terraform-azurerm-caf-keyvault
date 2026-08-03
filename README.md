@@ -31,8 +31,8 @@ for the map-based (`for_each`) L2 blueprint pattern.
 | Key | Type | Description |
 |---|---|---|
 | `name` | string | Override the auto-generated Key Vault name (default: `{env4}CKV-{userDefinedString}-{unique}-kv`) |
-| `soft_delete_retention_days` | number | Number of days that soft-deleted items are retained (`7`-`90`, provider default `90`). Can only be configured once |
-| `access_policy` | list(object) | Inline access policies (up to 1024). Mutually exclusive with managing the same `object_id` via the standalone `azurerm_key_vault_access_policy` resource |
+| `soft_delete_retention_days` | number | Number of days that soft-deleted items are retained (`7`-`90`, provider default `90`). Can only be configured once. Rejected at plan time via a `lifecycle.precondition` if out of range |
+| `access_policy` | list(object) | Inline access policies (up to 1024). Mutually exclusive with `akv_features.enable_rbac_authorization = true` (rejected at plan time via a `lifecycle.precondition`) and with managing the same `object_id` via the standalone `azurerm_key_vault_access_policy` resource |
 
 See [`ESLZ/key_vault.tfvars`](ESLZ/key_vault.tfvars) for full commented examples.
 
@@ -41,6 +41,15 @@ See [`ESLZ/key_vault.tfvars`](ESLZ/key_vault.tfvars) for full commented examples
 > (previously Optional, default `false`). This module preserves the old default by falling back
 > to `false` when `enable_rbac_authorization` is omitted from `akv_features` — no caller changes
 > required.
+
+> **Defaults worth knowing:**
+> - `akv_features.public_network_access_enabled` defaults to `false` (private-only) rather than
+>   the Azure API default of `true`. Callers that want public access must explicitly set
+>   `akv_features.public_network_access_enabled = true` (see the ESLZ tfvars example).
+> - `network_acls.bypass` defaults to `"AzureServices"` when a `network_acls` block is supplied
+>   but `bypass` is omitted — Azure requires this field to be `"AzureServices"` or `"None"`
+>   whenever `network_acls` is present, so leaving it unset would otherwise produce a confusing
+>   provider error.
 
 ## Testing
 
@@ -64,7 +73,7 @@ GitHub Actions workflow at `.github/workflows/terraform-ci.yml` runs fmt, init, 
 
 | Name | Version |
 |------|---------|
-| <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | ~> 5.0 |
+| <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | 5.0.1 |
 
 ## Modules
 

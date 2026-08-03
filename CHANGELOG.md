@@ -31,6 +31,12 @@ The format from this entry onward follows [Keep a Changelog](https://keepachange
 - `lifecycle.precondition` on `azurerm_key_vault.akv` that rejects configurations combining
   `enable_rbac_authorization = true` with inline `access_policy` entries (mutually exclusive in
   Azure).
+- `lifecycle.precondition` on `azurerm_key_vault.akv` that rejects `soft_delete_retention_days`
+  values outside Azure's supported `7`-`90` range.
+- `network_acls.bypass` now defaults to `"AzureServices"` (was `null`) when a `network_acls` block
+  is supplied without an explicit `bypass` — Azure requires this field to be `"AzureServices"` or
+  `"None"` whenever `network_acls` is present, so `null` would have produced a confusing provider
+  error at apply time.
 - `providers.tf`, `.tflint.hcl` (none previously existed).
 - `.github/workflows/terraform-ci.yml` and `.github/workflows/release.yml` (release-on-merge,
   tagged from `ESLZ/key_vault.tf`'s own `?ref=`).
@@ -38,8 +44,17 @@ The format from this entry onward follows [Keep a Changelog](https://keepachange
   examples for every new argument; added missing `variable "env"` and `variable "tags"` declarations
   so `terraform validate` passes in the ESLZ directory.
 - `tests/key_vault.tftest.hcl` and `tests/upgrade_compat.tftest.hcl` (no prior test coverage
-  existed; 12 runs total, using `override_data` on `data.azurerm_client_config.current` so
+  existed; 14 runs total, using `override_data` on `data.azurerm_client_config.current` so
   `tenant_id` is a valid UUID under `mock_provider`).
+
+### Fixed (PR review follow-up)
+
+- `network_acls.bypass` defaulted to `null`, which Azure rejects whenever `network_acls` is
+  present without an explicit `bypass` — now defaults to `"AzureServices"`.
+- `soft_delete_retention_days` accepted any number with no validation against Azure's `7`-`90`
+  range — now rejected at plan time via a `lifecycle.precondition`.
+- `akv_features.public_network_access_enabled`'s `false` default (vs. the Azure API's `true`
+  default) is now explicitly documented in the README.
 
 ### Known blockers
 
