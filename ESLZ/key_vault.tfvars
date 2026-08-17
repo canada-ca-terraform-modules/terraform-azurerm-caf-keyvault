@@ -48,5 +48,12 @@ key_vaults = {
   #       secret_permissions = ["Get", "List"]
   #     }
   #   ]
+  #
+  #   # Optional: per-resource tags merged with the base var.tags.
+  #   # These take precedence over base tags for the same key.
+  #   tags = {
+  #     Application = "MyApp"
+  #     CostCenter  = "12345"
+  #   }
   # }
 }

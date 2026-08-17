@@ -27,11 +27,11 @@ variable "resource_groups" {
 
 module "key_vault" {
   for_each = var.key_vaults
-  source   = "github.com/canada-ca-terraform-modules/terraform-azurerm-caf-keyvault?ref=v2.2.0"
+  source   = "github.com/canada-ca-terraform-modules/terraform-azurerm-caf-keyvault?ref=v2.3.0"
 
   env               = var.env
   userDefinedString = each.key
   resource_group    = var.resource_groups[each.value.resource_group]
-  tags              = var.tags
+  tags              = merge(var.tags, try(each.value.tags, {}))
   akv_config        = each.value
 }

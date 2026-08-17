@@ -1,12 +1,12 @@
 # Deploys an Azure Key Vault
 
-Requires the `azurerm` provider `~> 5.0`.
+Requires the `azurerm` provider `>= 4.0`.
 
 Reference the module to a specific version (recommended):
 
 ```hcl
 module "key_vault" {
-  source             = "github.com/canada-ca-terraform-modules/terraform-azurerm-caf-keyvault?ref=v2.2.0"
+  source             = "github.com/canada-ca-terraform-modules/terraform-azurerm-caf-keyvault?ref=v2.3.0"
   userDefinedString  = "${var.group}_${var.project}"
   resource_group     = azurerm_resource_group.example
   tags               = var.tags
@@ -67,13 +67,13 @@ GitHub Actions workflow at `.github/workflows/terraform-ci.yml` runs fmt, init, 
 | Name | Version |
 |------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.9 |
-| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | ~> 5.0 |
+| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | >= 4.0 |
 
 ## Providers
 
 | Name | Version |
 |------|---------|
-| <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | ~> 5.0 |
+| <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | >= 4.0 |
 
 ## Modules
 
