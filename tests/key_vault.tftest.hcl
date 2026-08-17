@@ -217,3 +217,50 @@ run "soft_delete_retention_days_out_of_range_rejected" {
   }
 }
 
+
+run "per_resource_custom_tags" {
+  command = plan
+  variables {
+    akv_config = {
+      sku_name     = "standard"
+      akv_features = {}
+      tags = {
+        Application = "MyApp"
+        CostCenter  = "12345"
+      }
+    }
+  }
+  assert {
+    condition     = azurerm_key_vault.akv.tags["Application"] == "MyApp"
+    error_message = "Per-resource custom tags must be merged into resource tags"
+  }
+  assert {
+    condition     = azurerm_key_vault.akv.tags["CostCenter"] == "12345"
+    error_message = "Per-resource custom tags must be merged into resource tags"
+  }
+  assert {
+    condition     = azurerm_key_vault.akv.tags["environment"] == "test"
+    error_message = "Base var.tags must still be present after merge"
+  }
+  assert {
+    condition     = azurerm_key_vault.akv.tags["module"] == "terraform-azurerm-caf-keyvault"
+    error_message = "Module tag must still be present after merge"
+  }
+}
+
+run "per_resource_tags_override_base" {
+  command = plan
+  variables {
+    akv_config = {
+      sku_name     = "standard"
+      akv_features = {}
+      tags = {
+        environment = "prod-override"
+      }
+    }
+  }
+  assert {
+    condition     = azurerm_key_vault.akv.tags["environment"] == "prod-override"
+    error_message = "Per-resource tags must take precedence over base tags on key conflict"
+  }
+}

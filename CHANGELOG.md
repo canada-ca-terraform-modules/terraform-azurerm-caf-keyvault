@@ -1,3 +1,21 @@
+## [2.3.0] - 2026-08-17
+
+### Added
+
+- Per-resource custom tags: `akv_config.tags` (optional `map(string)`) is merged with `var.tags` —
+  per-resource tags take precedence on key conflict. Follows the same merge pattern as
+  `linux_virtual_machineV2` (`merge(var.tags, try(config.tags, {}))`).
+- ESLZ layer now passes `merge(var.tags, try(each.value.tags, {}))` so each key vault instance in
+  the `key_vaults` map can carry its own tags.
+- Commented `tags` example in `ESLZ/key_vault.tfvars`.
+
+### Changed
+
+- Widened `azurerm` provider constraint from `~> 5.0` to `>= 4.0`. All arguments used
+  (`rbac_authorization_enabled`, `public_network_access_enabled`, `soft_delete_retention_days`,
+  `access_policy` block) exist in azurerm v4+. No v5-only features are consumed.
+- Bumped ESLZ module ref from `v2.2.0` to `v2.3.0`.
+
 ## [2.2.0] - 2026-08-03
 
 The format from this entry onward follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
