@@ -11,7 +11,10 @@
 # tracked fixture) - no vnet dependency is created here.
 
 resource "azurerm_resource_group" "live_test" {
-  name     = "${var.env}-caf-keyvault-live-test-rg"
+  # PR-number suffix keeps two concurrently open PRs against this module from
+  # colliding on the same sandbox resource group (or, via the module's own
+  # resource_group.id-derived naming, the same Key Vault name).
+  name     = "${var.env}-caf-keyvault-live-test-${var.pr_number}-rg"
   location = var.location
 }
 

@@ -18,6 +18,17 @@ variable "tags" {
   }
 }
 
+variable "pr_number" {
+  description = <<-EOT
+    Suffix applied to test_dependencies.tf resource names so concurrent PRs
+    against this module never collide on the same sandbox subscription. CI
+    sources this from `TF_VAR_pr_number` (`github.event.number`); manual runs
+    can leave the default or pass their own value.
+  EOT
+  type        = string
+  default     = "manual"
+}
+
 variable "akv_config" {
   description = "Key Vault configuration object, passed straight through to the module under test"
   type        = any
