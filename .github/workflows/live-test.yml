@@ -39,8 +39,14 @@ jobs:
     environment: live-test
     env:
       TF_VAR_pr_number: ${{ github.event.number }}
-      LIVE_TEST_STATE: ${{ runner.temp }}/live-test-${{ github.event.number }}.tfstate
     steps:
+      # runner.temp is only resolvable once a runner is allocated, so the
+      # shared state path can't live in the job-level `env:` above (that's
+      # evaluated before a runner exists) - compute it here instead, via the
+      # real $RUNNER_TEMP env var, and export it for every later step.
+      - name: Compute shared state path
+        run: echo "LIVE_TEST_STATE=${RUNNER_TEMP}/live-test-${TF_VAR_pr_number}.tfstate" >> "$GITHUB_ENV"
+
       - name: Checkout PR branch
         uses: actions/checkout@v7.0.1
         with:
@@ -93,6 +99,7 @@ jobs:
         if: always()
         env:
           GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
           PR_NUMBER: ${{ github.event.number }}
           PLAN_SUMMARY: ${{ steps.classify.outputs.summary }}
         run: gh pr comment "$PR_NUMBER" --body "$PLAN_SUMMARY"
