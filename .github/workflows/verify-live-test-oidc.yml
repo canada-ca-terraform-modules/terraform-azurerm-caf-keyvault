@@ -2,8 +2,10 @@ name: Verify live-test OIDC auth
 
 # One-off verification for ticket 09 (OIDC & sandbox Azure auth wiring):
 # confirms the live-test Environment's federated credential can authenticate
-# and reach the sandbox resource group. Superseded by the full live-test
-# pipeline once ticket 12 lands.
+# and reach the sandbox subscription. No resource group is assumed to
+# pre-exist -- test_dependencies.tf creates one ephemerally per live-test
+# run, so this smoke test checks subscription-level access instead.
+# Superseded by the full live-test pipeline once ticket 12 lands.
 on:
   workflow_dispatch: {}
 
@@ -23,5 +25,5 @@ jobs:
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
-      - name: List sandbox resource group resources
-        run: az resource list --resource-group rg-live-test-keyvault-sandbox -o table
+      - name: List resource groups in sandbox subscription
+        run: az group list -o table
