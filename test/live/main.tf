@@ -1,0 +1,39 @@
+terraform {
+  required_version = ">= 1.9"
+  required_providers {
+    azurerm = {
+      source  = "hashicorp/azurerm"
+      version = ">= 4.0"
+    }
+  }
+}
+
+provider "azurerm" {
+  storage_use_azuread             = true
+  resource_provider_registrations = "legacy"
+  features {
+    key_vault {
+      # This harness's Key Vault is fully self-owned by Terraform - safe to
+      # purge on destroy every run.
+      purge_soft_delete_on_destroy    = true
+      recover_soft_deleted_key_vaults = true
+    }
+    resource_group {
+      # This harness's resource group is fully self-owned by Terraform - no
+      # risk of destroying anything not created by this run.
+      prevent_deletion_if_contains_resources = false
+    }
+  }
+}
+
+module "key_vault" {
+  # PR code and baseline code are two on-disk checkouts of this same repo,
+  # not two resolved git refs - no pinned ?ref, no version toggle here.
+  source = "../../"
+
+  env               = var.env
+  userDefinedString = "livetest"
+  resource_group    = local.resource_group # from test_dependencies.tf
+  tags              = var.tags
+  akv_config        = var.akv_config
+}
