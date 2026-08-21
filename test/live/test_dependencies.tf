@@ -21,6 +21,7 @@ resource "azurerm_resource_group" "live_test" {
   # by tag and match it back to a PR, independent of naming convention.
   tags = {
     "pr-number" = var.pr_number
+    "demo"      = "ticket-13-concurrency-guard"
   }
 }
 
