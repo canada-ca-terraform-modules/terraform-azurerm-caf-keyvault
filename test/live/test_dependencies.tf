@@ -16,6 +16,12 @@ resource "azurerm_resource_group" "live_test" {
   # resource_group.id-derived naming, the same Key Vault name).
   name     = "${var.env}-caf-keyvault-live-test-${var.pr_number}-rg"
   location = var.location
+
+  # pr-number tag (ticket 13): lets the nightly orphan sweeper find this RG
+  # by tag and match it back to a PR, independent of naming convention.
+  tags = {
+    "pr-number" = var.pr_number
+  }
 }
 
 locals {
